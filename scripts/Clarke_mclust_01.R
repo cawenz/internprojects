@@ -2,8 +2,8 @@
 ##
 ## Script name: mclust_steps_for_Clarke
 ##
-## Purpose of script: Get Clarke started writing loops in R
-##
+## Purpose of script: Get Clarke started writing loops in R and understanding
+## how mclust works
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##
 ## Notes: Start by running the code in this header. That will install the
@@ -30,6 +30,7 @@ pisaUSA15na <- tidyr::drop_na(pisaUSA15) #remove all NA values
 ##
 pisa <- dplyr::sample_n(pisaUSA15na , 500) # randomly select 500 rows
 summary (pisa)
+## END HEADER ##
 ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ---- Get familiar with Mclust  ---- 
@@ -111,11 +112,18 @@ pisaICL2 <- mclustICL(pisa, G=1:5,
 )
 pisaICLbest <- mclustBICupdate(pisaICL, pisaICL2)
 
-
-## A good first step then, would be to run: 
-# a mclustBIC loop and a mclustICL loop (25 times each) then find the best models
-# according to each. 
-
-# we now have a data frame with the BIC values for all 14 model types with G=1:5
-# (NA means the model didn't converge)
-
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ---- Task 1 ---- 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##
+## A good first task would be to program 2 loops:
+##                              one using mclustBIC and one using mclustICL
+## Let's run each loop 25 times with random starts each time.
+##
+## Then, combine the results of the loop and use the mclustBICupdate function (or
+## some other method) to identify the best three models according to BIC 
+## AND the best three models accoring to ICL.
+##
+##
+##
+##
