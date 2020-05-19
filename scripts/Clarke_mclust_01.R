@@ -35,7 +35,7 @@ summary (pisa)
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ---- Get familiar with Mclust  ---- 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-?Mclust # load the documentation for Mclust command
+??Mclust # load the documentation for Mclust command
 xtest <- Mclust (pisa, # data
                  G=1:5,# of possible clusters
                  initialization=list(hcpairs=randomPairs(pisa)) #random start

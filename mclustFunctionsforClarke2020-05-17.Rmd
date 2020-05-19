@@ -1,0 +1,76 @@
+---
+title: "mclustFunctionsforClarke"
+author: "Chris Wenz"
+date: "5/17/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results="hide")
+options(scipen = 6, digits = 4, width=80)
+set.seed(1014)
+require(readr) #to load data into R
+require(tidyverse) # essential tools for wrangling and visualizing data 
+require(mclust) # package for model-based clustering
+```
+
+## Objective
+
+Write (several) functions that simplify the process of evaluating a model that was fit using mclust:  
+
+1. **Relative fit statistics**
+
+* Consistent Akaike's Information Criterion $(CAIC)$
+* Approximate Weight of Evidence Criterion $(AWE)$
+* Schwarz Information Criterion $(SIC)$
+
+2. **Classification Diagnostics**
+* Relative Entropy $(E_K)$
+* Average Posterior Probability of estimated classes $(AvePP_k)$
+* Odds of corect classification $(OCC_k)$
+* Modal class assignment proportion $(mcaP_k)$
+
+All of these measures can be calculated based on the data stored in an mclust object. I'll walk you through examples of how to do this. 
+
+## What's in an mclust object
+Let's run mclust with the PISA data I've already shared with you. 
+```{r mclustPISA} 
+library(readr)
+# read in all PISA data
+pisaUSA15 <- read_csv("data/pisaUSA15.csv")
+```
+
+```{r makextest, include=T}
+# remove all NA values
+pisaUSA15na <- tidyr::drop_na(pisaUSA15) 
+# create a smaller sample to make model run fast
+pisa <- dplyr::sample_n(pisaUSA15na , 500)
+# Run a model (xtest)
+xtest <- Mclust (pisa, # data
+                 G=1:5,# of possible clusters/classes
+                 initialization=list(hcpairs=randomPairs(pisa))#random start 
+                 )
+```
+
+We now have an mclust object called `xtest` in the R environment. In the package documentation for mclust, we can see what the "Value" of an Mclust object includes by running ?Mclust in the console. We can also view the list of Values in the object in the Global environment in Rstudio. 
+
+```{r mclustlistpic}
+imgEnv <- ""
+
+
+
+
+
+
+
+We can pull values out of an mclust object, so that we can use them to calculate the relative fit statistics and classification diagnostics.
+
+For example, if I want to see the log-likelihood of the "best" model selected by mclust when we ran `xtest` I can use the command `xtest$loglik` and the value will print in the console. In this case the value is -1857. 
+
+## Relative Fit Statistics
+
+The relative fit statistics are calculated using the Log likelihood $(LL)$ of an estimated model. They are very similar to the Bayesian Information Criteria ($BIC$) and Integrated Complete-data Likelihood ($ICL$) that mclust estimates automatically.
+
+
