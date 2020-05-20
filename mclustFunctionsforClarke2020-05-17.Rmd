@@ -37,14 +37,12 @@ All of these measures can be calculated based on the data stored in an `Mclust` 
 
 ## What's in an `Mclust` object?
 Let's run `Mclust` with the PISA data I've already shared with you. 
+`Let's run mclust with the PISA data I've already shared with you. 
 ```{r mclustPISA, message=F} 
 library(readr)
 # read in all PISA data
-pisaUSA15 <- read_csv("data/pisaUSA15.csv")
-# remove all NA values
-pisaUSA15na <- tidyr::drop_na(pisaUSA15) 
-# create a smaller sample to make model run fast
-pisa <- dplyr::sample_n(pisaUSA15na , 500)
+pisa <- read_csv("data/pisa500n.csv")
+head(pisa)
 # Run a model (xtest)
 xtest <- Mclust (pisa, # data
                  G=1:5,# of possible clusters/classes
@@ -90,7 +88,9 @@ But relative fit statistics are used to compare multiple models, and so they are
 However, we don't have easy access to all of the information we need to do that in the `xtest` object. We know the value of $n$ because that doesn't change. We also know the $BIC$ values and we can view these quite easily and store the values in a table. To get rid of the annoying negative term in mclust's $BIC$ formula, we can multiply `xtest$BIC` by -1. This will make all of the formulas above produce the appropriate results. 
 
 ``` {r bictable, include=T}
-bictbl<-(as.table(-1*(xtest$BIC)))
+negBIC <- data.frame(xtest$BIC[,]) 
+# Now reverse the sign to get rid of the annoying negative term
+bictbl<- -1*negBIC
 bictbl
 ```
 
@@ -162,11 +162,16 @@ This table now tells us the $df$ associated with the $BIC$ values in row 3 of `b
 So the goal is to write a function that can create a table of log-likelihood values based on the information stored in an `Mclust` object. That will involve getting information from the `mclust` function `nMclustParams` and then using it in an equation solving for $LL$ when $BIC$ and $n$ are known from the `Mclust` object (like I did above): $\large{LL = \frac{BIC-(df*log(n))}{-2}}$. 
 
 ### Here are some things to consider. 
-1. I ***think*** the easiest way to do this will be to generate a table of $df$ values using `nMclustParams` where the loop runs through the full list of model names (see `mclust.options("emModelNames")` for every value of G that was estimated in the `Mclust` object. You can get that value by using the command `nameofmclustobject$call$G`. So with our object `xtest` we could save the G value from the call like so: 
+1. I *think* the easiest way to do this will be to generate a table of *df* values using `nMclustParams` where the loop runs through the full list of model names (see `mclust.options("emModelNames")` for every value of G that was estimated in the mclust object. You can get that value by using the command `nameofmclustobject$call$G`. So with our object `xtest` we could find the G value from the call like so: 
 
 ```{r}
-xtestG <- xtest$call$G
-xtestG
+xtest$call$G
+```
+
+  * The problem with this is that the data in the call is a "language" object; we can't simply substitute `xtest$call$G` because it's not an integer in the way the expression `1:5` is. There is probably a way to make it work, but I am not certain how. Another way to get the values of *G* in the original call is to use the row names in the data.frame made from `xtest$BIC`. 
+  
+```{r}
+as.integer(row.names(bictbl))
 ```
 
 2. My knowledge is pretty limited on this front, but one way to create a table inside a loop is to create an empty data.frame at the top of the loop. So the table could be called "numparam" and you'd write `numparam <- c()` at the top of the loop. Then each pass of the the loop could produce a column of values; the loop could then end by using the function `rbind` or something similar to fill in the columns of the empty table. 

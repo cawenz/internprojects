@@ -39,7 +39,7 @@ summary (pisa)
 xtest <- Mclust (pisa, # data
                  G=1:5,# of possible clusters
                  initialization=list(hcpairs=randomPairs(pisa)) #random start
-                 )
+                 )#
 # Look at xtest: it is an mclust object containing results of the mclust run
 summary (xtest, parameters=T) # show results of the best model (using BIC)
 #uncomment the next two lines if you want to see the plots mclust generates
