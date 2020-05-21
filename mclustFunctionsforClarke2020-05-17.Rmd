@@ -54,7 +54,7 @@ We now have an `Mclust` object called `xtest` in the R environment. We can open 
 
 ![](images/env.png)
 
-You'll notice that in this view of the object `xtest`, there are values that are marked by `$`. We can pull those values out of the object, so that we can use them in other commands. For example, if I want to see the log-likelihood of the "best" model selected by `Mclust` when we ran `xtest` I can use the command `xtest$loglik` and the value will print in the Console in RStudio. In this case the value is -1857. Similarly, the command `xtest$BIC` will print a table of the $BIC$ values for all of the models estimated when we ran `Mclust` to produce the object `xtest`.
+You'll notice that in this view of the object `xtest`, there are values that are marked by `$`. We can pull those values out of the object, so that we can use them in other commands. For example, if I want to see the log-likelihood of the "best" model selected by `Mclust` when we ran `xtest` I can use the command `xtest$loglik` and the value will print in the Console in RStudio. Similarly, the command `xtest$BIC` will print a table of the $BIC$ values for all of the models estimated when we ran `Mclust` to produce the object `xtest`.
 
 In some cases the values are nested. For example, there are numerous values nested under `parameters`. So, to see the mean values of the four indicators for the classes, we have to use the command `xtest$parameters$mean`. 
 
@@ -88,7 +88,7 @@ But relative fit statistics are used to compare multiple models, and so they are
 However, we don't have easy access to all of the information we need to do that in the `xtest` object. We know the value of $n$ because that doesn't change. We also know the $BIC$ values and we can view these quite easily and store the values in a table. To get rid of the annoying negative term in mclust's $BIC$ formula, we can multiply `xtest$BIC` by -1. This will make all of the formulas above produce the appropriate results. 
 
 ``` {r bictable, include=T}
-negBIC <- data.frame(xtest$BIC[,]) 
+negBIC <- as_tibble(xtest$BIC[,]) 
 # Now reverse the sign to get rid of the annoying negative term
 bictbl<- -1*negBIC
 bictbl
@@ -162,23 +162,35 @@ This table now tells us the $df$ associated with the $BIC$ values in row 3 of `b
 So the goal is to write a function that can create a table of log-likelihood values based on the information stored in an `Mclust` object. That will involve getting information from the `mclust` function `nMclustParams` and then using it in an equation solving for $LL$ when $BIC$ and $n$ are known from the `Mclust` object (like I did above): $\large{LL = \frac{BIC-(df*log(n))}{-2}}$. 
 
 ### Here are some things to consider. 
-1. I *think* the easiest way to do this will be to generate a table of *df* values using `nMclustParams` where the loop runs through the full list of model names (see `mclust.options("emModelNames")` for every value of G that was estimated in the mclust object. You can get that value by using the command `nameofmclustobject$call$G`. So with our object `xtest` we could find the G value from the call like so: 
+1. I *think* the easiest way to do this will be to generate a table of *df* values using `nMclustParams` where the loop runs through the model names for every value of G that was estimated in the mclust object. 
+
+2. The value of *d* which is a required arguments for `nMclustParams`is determined by the data, not by the model and so that can be easily pulled from the `Mclust` object using (for example with `xtest`) `xtest$d`. 
+
+3. You can get the range of G values estimated in an Mclust object by using the command `nameofmclustobject$call$G`. So with our object `xtest` we could find the G value from the call like so: 
 
 ```{r}
 xtest$call$G
 ```
 
-  * The problem with this is that the data in the call is a "language" object; we can't simply substitute `xtest$call$G` because it's not an integer in the way the expression `1:5` is. There is probably a way to make it work, but I am not certain how. Another way to get the values of *G* in the original call is to use the row names in the data.frame made from `xtest$BIC`. 
+  * The problem with this is that the data in the call is a "language" object; we can't simply substitute `xtest$call$G` because it's not an integer in the way the expression `1:5` is. 
   
-```{r}
-as.integer(row.names(bictbl))
+  * Another option is to pull attributes associated with `xtest$BIC`. We can view all of those attributes and then find the ones we want, then store them as vectors.
+``` {r attributes}
+attributes(xtest$BIC)
+``` 
+
+* There's an attribute for G and modelnames! We can't use the $ operator with these because they are atomic vectors. Instead, we can use the `attr` function. 
+``` {r attr}
+attr(xtest$BIC, "G")
+attr(xtest$BIC, "modelNames")
 ```
+* We can store those attributes and then use them to tell the loop of `nMclustParams` what to do. 
 
-2. My knowledge is pretty limited on this front, but one way to create a table inside a loop is to create an empty data.frame at the top of the loop. So the table could be called "numparam" and you'd write `numparam <- c()` at the top of the loop. Then each pass of the the loop could produce a column of values; the loop could then end by using the function `rbind` or something similar to fill in the columns of the empty table. 
+4. My knowledge is pretty limited on this front, but one way to create a table inside a loop is to create an empty data.frame at the top of the loop. So the table could be called "numparam" and you'd write `numparam <- c()` at the top of the loop. Then each pass of the the loop could produce a column of values; the loop could then end by using the function `rbind` or something similar to fill in the columns of the empty table. 
 
-3. in `xtest$bic` there are several empty cells. That is because those models didn't "converge" so there was no $LL$ estimated, and thus no $BIC$. Any loop you write using `xtest$BIC` may need to account for the fact that some of the values will be NaN (not a number). 
+5. in `xtest$bic` there are several empty cells. That is because those models didn't "converge" so there was no $LL$ estimated, and thus no $BIC$. Any loop you write using `xtest$BIC` may need to account for the fact that some of the values will be NaN (not a number). 
 
-4. The value of *d* and *n* are determined by the data, not by the model and so they can be pulled from the `Mclust` object. In any calculations you are doing *n* can always be `xtest$n`. Because the PISA data has four variables, *d* will equal 4 when using `nMclustParams`; even better than using the integer 4, you could simply specify that d= `xtest$d`. 
+
 
 
   
